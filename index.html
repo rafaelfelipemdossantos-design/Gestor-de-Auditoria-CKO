@@ -2,10 +2,13 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="CKO Pro">
+    <link rel="apple-touch-icon" href="logo.png">
     <title>Auditoria CKO Pro</title>
     
     <!-- PWA Manifest -->
@@ -16,23 +19,46 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f1f5f9; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            overscroll-behavior-y: contain;
+        }
         .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
         input:focus, select:focus { outline: 2px solid #4f46e5; outline-offset: 1px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Estilo para PWA */
-        @media all and (display-mode: standalone) {
-            header { padding-top: env(safe-area-inset-top); }
+        /* Estilo para PWA e Safe Areas */
+        header { 
+            padding-top: max(1.5rem, env(safe-area-inset-top));
+            padding-bottom: 1.5rem;
+        }
+        
+        /* Ajuste de inputs para não dar zoom no iOS */
+        input[type="text"], input[type="number"], select {
+            font-size: 16px !important;
+        }
+
+        /* Melhorias no Modal para Mobile */
+        #auditModal > div {
+            padding-bottom: max(2rem, env(safe-area-inset-bottom));
+        }
+
+        .active-scale:active {
+            transform: scale(0.98);
+            transition: transform 0.1s;
         }
     </style>
 </head>
 <body class="pb-20">
 
     <!-- Header com Logo SVG -->
-    <header class="bg-slate-900 text-white p-6 sticky top-0 z-50 shadow-md">
+    <header class="bg-slate-900 text-white px-6 sticky top-0 z-50 shadow-md">
         <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
                 <!-- Logo Criado em SVG -->
                 <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-lg">
                     <rect width="100" height="100" rx="22" fill="#4f46e5"/>
@@ -45,10 +71,10 @@
                 </div>
             </div>
             <div class="flex gap-2 w-full md:w-auto">
-                <button onclick="confirmReset()" class="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-3 rounded-xl transition-all font-bold text-xs border border-red-500/20 flex items-center justify-center gap-2">
+                <button onclick="confirmReset()" class="active-scale flex-1 md:flex-none bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-3 rounded-xl transition-all font-bold text-xs border border-red-500/20 flex items-center justify-center gap-2">
                     <i data-lucide="trash-2" class="w-4 h-4"></i> Resetar
                 </button>
-                <button onclick="exportToExcel()" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 p-3 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-xs text-white">
+                <button onclick="exportToExcel()" class="active-scale flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 p-3 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-xs text-white">
                     <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar CSV
                 </button>
             </div>
@@ -101,16 +127,16 @@
         <div id="storeList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </main>
 
-    <!-- Modal Form (Seu formulário original com melhorias visuais para mobile) -->
+    <!-- Modal Form -->
     <div id="auditModal" class="fixed inset-0 bg-slate-900/60 hidden z-[60] flex items-end md:items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-full max-w-xl rounded-t-[32px] md:rounded-[32px] p-6 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
+        <div class="bg-white w-full max-w-xl rounded-t-[32px] md:rounded-[32px] p-6 shadow-2xl overflow-y-auto max-h-[95vh] no-scrollbar">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden"></div>
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h2 id="modalTitle" class="text-xl font-black text-slate-800 uppercase leading-tight"></h2>
                     <p id="modalSubtitle" class="text-xs text-slate-500 font-mono mt-1"></p>
                 </div>
-                <button onclick="toggleModal('auditModal')" class="bg-slate-100 p-2 rounded-full text-slate-400">
+                <button onclick="toggleModal('auditModal')" class="bg-slate-100 p-2 rounded-full text-slate-400 active-scale">
                     <i data-lucide="x"></i>
                 </button>
             </div>
@@ -169,7 +195,7 @@
                 </div>
 
                 <div class="pt-4 flex gap-3">
-                    <button type="submit" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-black active:scale-95 transition-all uppercase tracking-wider">
+                    <button type="submit" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-black active-scale transition-all uppercase tracking-wider">
                         Confirmar Auditoria
                     </button>
                 </div>
@@ -186,8 +212,8 @@
             <h2 class="text-2xl font-black text-slate-800 uppercase mb-3">Limpar Base?</h2>
             <p class="text-slate-500 text-sm mb-8 leading-relaxed">Isso apagará todos os dados salvos permanentemente. Esta ação não pode ser desfeita.</p>
             <div class="flex flex-col gap-3">
-                <button onclick="executeReset()" class="w-full bg-red-600 text-white py-4 rounded-2xl font-black uppercase">Sim, apagar tudo</button>
-                <button onclick="toggleModal('resetModal')" class="w-full py-4 font-bold text-slate-400">Cancelar</button>
+                <button onclick="executeReset()" class="active-scale w-full bg-red-600 text-white py-4 rounded-2xl font-black uppercase">Sim, apagar tudo</button>
+                <button onclick="toggleModal('resetModal')" class="active-scale w-full py-4 font-bold text-slate-400">Cancelar</button>
             </div>
         </div>
     </div>
@@ -195,7 +221,6 @@
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-sm font-bold opacity-0 pointer-events-none transition-all duration-500 shadow-2xl z-[100] flex items-center gap-3"></div>
 
     <script>
-        // Logica idêntica à sua, mantendo compatibilidade de dados
         const officialStores = [
             { id: '0014W00002e9KqTQAU', name: 'COMERCIAL ESPERANCA SUZANO', canal: 'C&C', setor: 'SP547', colab: 'GISLAINE DUARTE DA SILVA' },
             { id: '0018a000022TUUnAAO', name: 'SEMAR POA', canal: 'NMR', setor: 'SPC346', colab: 'LETICIA DA SILVA SAMPAIO' },
@@ -209,7 +234,7 @@
             { id: '0014W00002e9KlpQAE', name: 'ASSAI ITAQUAQUECETUBA 75', canal: 'C&C', setor: 'SPC374', colab: 'FERNANDA LUANA ROCHA' },
             { id: '0014W00002e9J9uQAE', name: 'D AVO ITAQUAQUECETUBA', canal: 'NMR', setor: 'SPC374', colab: 'FERNANDA LUANA ROCHA' },
             { id: '0018a00001x72eUAAQ', name: 'REDE DROGA LESTE ITALO ADAMI 750', canal: 'DPP', setor: 'SPC374', colab: 'FERNANDA LUANA ROCHA' },
-            { id: '0014W00002e9KEVQA2', name: 'ROSSI JARDIM BARAO', canal: 'NMR', setor: 'SPC477', colab: 'GISELE CRISTINA BANDEIRA' },
+            { id: '0014W00002e9KEVQA2', name: 'ROSSI JARDIM BARAO', canal: 'NMR', setor: 'SPC477', colab: 'GISELE CRISTINA BANEIRA' },
             { id: '0014W00002e9JrAQAU', name: 'SHIBATA FERRAZ DE VASCONCELOS', canal: 'NMR', setor: 'SPC477', colab: 'GISELE CRISTINA BANDEIRA' },
             { id: '001Ho00001Z3pFUIZ', name: 'REDE ROSSI R ABEL BAPTISTA CAMILO', canal: 'NMR', setor: 'SP547', colab: 'GISLAINE DUARTE DA SILVA' },
             { id: '0018a000026L7DBAA0', name: 'ATACADAO ITAQUAQUECETUBA', canal: 'C&C', setor: 'SPC445', colab: 'JACKELINE AMBROZINA SILVA TOSTES' },
@@ -312,194 +337,159 @@
 
             container.innerHTML = data.map(store => {
                 const audit = audits[store.id];
-                const calcCKO = audit ? (audit.regular + audit.papafila) : 0;
-                const diff = audit ? calcCKO - audit.retail : 0;
+                const isPendente = !audit || audit.status === 'Pendente';
                 
                 return `
-                <div class="bg-white rounded-3xl border border-slate-200 card-shadow p-5 hover:border-indigo-300 transition-all cursor-pointer active:scale-[0.98]" onclick="openAuditModal('${store.id}')">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="text-[9px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black uppercase">${store.id.split('_')[0]}</span>
-                        ${audit ? `
-                            <span class="text-[9px] px-2 py-1 rounded-lg font-black uppercase ${audit.status === 'Resolvido' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                ${audit.status}
-                            </span>
-                        ` : ''}
-                    </div>
-                    
-                    <h3 class="font-black text-slate-800 leading-tight text-lg uppercase">${store.name}</h3>
-                    
-                    <div class="mt-3 grid grid-cols-2 gap-2">
-                        <div class="text-[10px]">
-                            <p class="text-slate-400 font-black uppercase">Responsável</p>
-                            <p class="text-indigo-600 font-bold truncate">${store.colab || '-'}</p>
-                        </div>
-                        <div class="text-[10px]">
-                            <p class="text-slate-400 font-black uppercase">Canal / Setor</p>
-                            <p class="text-slate-700 font-bold truncate">${store.canal || '-'} | ${store.setor || '-'}</p>
-                        </div>
-                    </div>
-
-                    ${audit ? `
-                        <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between items-end">
-                            <div class="flex gap-4">
-                                <div class="text-center">
-                                    <p class="text-[8px] text-slate-400 uppercase font-black">Auditado</p>
-                                    <p class="text-base font-black text-slate-800">${calcCKO}</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-[8px] text-slate-400 uppercase font-black">RetailX</p>
-                                    <p class="text-base font-black text-slate-800">${audit.retail}</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-[8px] text-slate-400 uppercase font-black">Diverg.</p>
-                                    <p class="text-base font-black ${diff != 0 ? 'text-red-500' : 'text-emerald-500'}">${diff > 0 ? '+'+diff : diff}</p>
-                                </div>
+                    <div onclick="openAudit('${store.id}')" class="bg-white p-5 rounded-[28px] border border-slate-200 card-shadow active-scale cursor-pointer group transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md uppercase tracking-tighter">${store.id}</span>
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-2 h-2 rounded-full ${isPendente ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}"></div>
+                                <span class="text-[10px] font-black uppercase ${isPendente ? 'text-amber-600' : 'text-emerald-600'}">
+                                    ${isPendente ? 'Aguardando Auditoria' : 'Auditado'}
+                                </span>
                             </div>
-                             <p class="text-[9px] text-slate-300 font-bold uppercase">${formatDate(audit.date)}</p>
                         </div>
-                    ` : `
-                        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2 text-slate-300 font-black text-[10px] uppercase">
-                            <i data-lucide="circle-dashed" class="w-3 h-3"></i> Aguardando Auditoria
+                        <h3 class="font-black text-slate-800 text-lg leading-tight mb-4 group-hover:text-indigo-600 transition-colors uppercase">${store.name}</h3>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                            <div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável</p>
+                                <p class="text-[11px] font-bold text-slate-600 uppercase truncate">${store.colab}</p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Canal / Setor</p>
+                                <p class="text-[11px] font-bold text-slate-600 uppercase">${store.canal} | ${store.setor}</p>
+                            </div>
                         </div>
-                    `}
-                </div>
+                    </div>
                 `;
             }).join('');
-            lucide.createIcons();
         }
 
         function filterStores() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const filtered = stores.filter(s => 
                 s.name.toLowerCase().includes(term) || 
-                s.id.toLowerCase().includes(term) ||
-                (s.colab && s.colab.toLowerCase().includes(term))
+                s.colab.toLowerCase().includes(term) ||
+                s.id.toLowerCase().includes(term)
             );
             renderStores(filtered);
         }
 
-        function openAuditModal(id) {
+        function openAudit(id) {
             const store = stores.find(s => s.id === id);
-            const audit = audits[id] || { regular: 0, papafila: 0, cnpj: 0, retail: 0, date: new Date().toISOString().split('T')[0], status: 'Pendente' };
+            const audit = audits[id] || {};
             
             document.getElementById('currentStoreId').value = id;
             document.getElementById('modalTitle').innerText = store.name;
-            document.getElementById('modalSubtitle').innerText = `ID: ${id.split('_')[0]} | SETOR: ${store.setor}`;
-            document.getElementById('editColab').value = store.colab || '';
+            document.getElementById('modalSubtitle').innerText = `ID: ${id} | ${store.canal} - ${store.setor}`;
             
-            document.getElementById('ckoRegular').value = audit.regular || '';
-            document.getElementById('ckoPapafila').value = audit.papafila || '';
-            document.getElementById('ckoCnpj').value = audit.cnpj || '';
-            document.getElementById('retailQty').value = audit.retail || '';
-            document.getElementById('requestDate').value = audit.date;
-            document.getElementById('auditStatus').value = audit.status;
+            document.getElementById('editColab').value = audit.colab || store.colab;
+            document.getElementById('ckoRegular').value = audit.ckoRegular || '';
+            document.getElementById('ckoPapafila').value = audit.ckoPapafila || '';
+            document.getElementById('ckoCnpj').value = audit.ckoCnpj || '';
+            document.getElementById('retailQty').value = audit.retailQty || '';
+            document.getElementById('auditStatus').value = audit.status || 'Pendente';
+            
+            if (audit.date) document.getElementById('requestDate').value = audit.date;
             
             calculateTotalCKO();
             toggleModal('auditModal');
         }
 
-        document.getElementById('auditForm').addEventListener('submit', (e) => {
+        document.getElementById('auditForm').onsubmit = (e) => {
             e.preventDefault();
             const id = document.getElementById('currentStoreId').value;
-            const newColab = document.getElementById('editColab').value.toUpperCase();
-
-            const storeIdx = stores.findIndex(s => s.id === id);
-            if (storeIdx !== -1) stores[storeIdx].colab = newColab;
             
             audits[id] = {
-                regular: parseInt(document.getElementById('ckoRegular').value) || 0,
-                papafila: parseInt(document.getElementById('ckoPapafila').value) || 0,
-                cnpj: parseInt(document.getElementById('ckoCnpj').value) || 0,
-                retail: parseInt(document.getElementById('retailQty').value) || 0,
-                date: document.getElementById('requestDate').value,
+                colab: document.getElementById('editColab').value.toUpperCase(),
+                ckoRegular: parseInt(document.getElementById('ckoRegular').value) || 0,
+                ckoPapafila: parseInt(document.getElementById('ckoPapafila').value) || 0,
+                ckoCnpj: parseInt(document.getElementById('ckoCnpj').value) || 0,
+                retailQty: parseInt(document.getElementById('retailQty').value) || 0,
+                totalCKO: calculateTotalCKO(),
                 status: document.getElementById('auditStatus').value,
-                updatedAt: new Date().toISOString()
+                date: document.getElementById('requestDate').value
             };
             
             saveData();
             renderStores();
             toggleModal('auditModal');
-            showToast('Dados salvos com sucesso!');
-        });
+            showToast('✅ Auditoria salva com sucesso!');
+        };
+
+        function updateStats() {
+            const total = stores.length;
+            const resolvidos = Object.values(audits).filter(a => a.status === 'Resolvido').length;
+            const pendentes = total - resolvidos;
+            const divergencias = Object.values(audits).filter(a => a.totalCKO !== a.retailQty).length;
+
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('statPendente').innerText = pendentes;
+            document.getElementById('statResolvido').innerText = resolvidos;
+            document.getElementById('statRegistros').innerText = divergencias;
+        }
+
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.classList.toggle('hidden');
+            if (!m.classList.contains('hidden')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
+        }
 
         function confirmReset() {
             toggleModal('resetModal');
         }
 
         function executeReset() {
-            audits = {};
-            saveData();
+            localStorage.clear();
+            loadData();
+            updateStats();
             renderStores();
             toggleModal('resetModal');
-            showToast('Base de dados limpa!');
-        }
-
-        function exportToExcel() {
-            if (Object.keys(audits).length === 0) {
-                showToast('Sem dados para exportar');
-                return;
-            }
-
-            const rows = stores.map(s => {
-                const a = audits[s.id] || {};
-                const calcCKO = (a.regular || 0) + (a.papafila || 0);
-                return [
-                    s.id.split('_')[0], s.name, s.canal || '', s.setor || '', s.colab || '',
-                    a.regular || 0, a.papafila || 0, a.cnpj || 0,
-                    calcCKO, a.retail || 0, calcCKO - (a.retail || 0),
-                    a.date || '', a.status || 'Pendente'
-                ];
-            });
-
-            const csvHeader = "ID_LOJA;UNIDADE;CANAL;SETOR;COLABORADOR;REGULAR;PAPAFILA;CNPJ_INFO;TOTAL_AUDITADO;RETAILX;DIVERGENCA;DATA;STATUS\n";
-            const csvBody = rows.map(r => r.join(';')).join('\n');
-            const blob = new Blob(["\ufeff" + csvHeader + csvBody], { type: 'text/csv;charset=utf-8;' });
-            
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Relatorio_CKO_${new Date().toLocaleDateString()}.csv`;
-            link.click();
-            showToast('Arquivo CSV gerado!');
-        }
-
-        function toggleModal(id) {
-            document.getElementById(id).classList.toggle('hidden');
+            showToast('🗑️ Base de dados limpa!');
         }
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.innerHTML = `<i data-lucide="info" class="w-4 h-4"></i> ${msg}`;
-            lucide.createIcons();
-            t.classList.remove('opacity-0', 'translate-y-4');
-            t.classList.add('opacity-100', '-translate-y-2');
+            t.innerText = msg;
+            t.style.opacity = '1';
+            t.style.bottom = '32px';
             setTimeout(() => {
-                t.classList.add('opacity-0', 'translate-y-4');
-                t.classList.remove('opacity-100', '-translate-y-2');
+                t.style.opacity = '0';
+                t.style.bottom = '16px';
             }, 3000);
         }
 
-        function updateStats() {
-            const vals = Object.values(audits);
-            document.getElementById('statTotal').innerText = stores.length;
-            document.getElementById('statPendente').innerText = stores.length - vals.filter(a => a.status === 'Resolvido').length;
-            document.getElementById('statResolvido').innerText = vals.filter(a => a.status === 'Resolvido').length;
-            
-            // Soma de divergências totais
-            const divergencias = vals.reduce((acc, a) => acc + Math.abs((a.regular + a.papafila) - a.retail), 0);
-            document.getElementById('statRegistros').innerText = divergencias;
-        }
+        function exportToExcel() {
+            if (Object.keys(audits).length === 0) {
+                showToast('❌ Não há dados para exportar');
+                return;
+            }
 
-        function formatDate(d) {
-            if(!d) return '';
-            const parts = d.split('-');
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            let csv = 'ID Loja;Unidade;Canal;Setor;Colaborador;Regular;Papa Fila;Informativo CNPJ;Total CKO;RetailX;Divergencia;Status;Data\n';
+            
+            stores.forEach(s => {
+                const a = audits[s.id] || {};
+                const div = a.totalCKO !== undefined ? a.totalCKO - a.retailQty : '';
+                csv += [
+                    s.id, s.name, s.canal, s.setor, a.colab || s.colab,
+                    a.ckoRegular || 0, a.ckoPapafila || 0, a.ckoCnpj || 0,
+                    a.totalCKO || 0, a.retailQty || 0, div, a.status || 'Pendente', a.date || ''
+                ].join(';') + '\n';
+            });
+
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `Auditoria_CKO_${new Date().toLocaleDateString()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-    </script>
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log("Service Worker registrado com sucesso!"))
-      .catch(err => console.log("Erro ao registrar Service Worker:", err));
-  }
     </script>
 </body>
 </html>
