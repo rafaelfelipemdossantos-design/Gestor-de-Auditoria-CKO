@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Auditoria CKO Pro</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Fontes e Ícones -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        input:focus, select:focus { outline: 2px solid #4f46e5; outline-offset: 1px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Estilo para PWA */
+        @media all and (display-mode: standalone) {
+            header { padding-top: env(safe-area-inset-top); }
+        }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- Header com Logo SVG -->
+    <header class="bg-slate-900 text-white p-6 sticky top-0 z-50 shadow-md">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <!-- Logo Criado em SVG -->
+                <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-lg">
+                    <rect width="100" height="100" rx="22" fill="#4f46e5"/>
+                    <path d="M30 50L45 65L75 35" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="25" y="25" width="50" height="50" rx="4" stroke="white" stroke-width="3" stroke-dasharray="4 4" opacity="0.5"/>
+                </svg>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight leading-none">AUDITORIA <span class="text-indigo-400">CKO</span></h1>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Smart Management System</p>
+                </div>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto">
+                <button onclick="confirmReset()" class="flex-1 md:flex-none bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-3 rounded-xl transition-all font-bold text-xs border border-red-500/20 flex items-center justify-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Resetar
+                </button>
+                <button onclick="exportToExcel()" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 p-3 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-xs text-white">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar CSV
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-4 space-y-6">
+        
+        <!-- Dashboard Rápido -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-[10px] text-slate-500 uppercase font-black">Lojas</p>
+                    <i data-lucide="home" class="w-3 h-3 text-slate-400"></i>
+                </div>
+                <p id="statTotal" class="text-2xl font-black text-slate-800">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-[10px] text-amber-500 uppercase font-black">Faltando</p>
+                    <i data-lucide="clock" class="w-3 h-3 text-amber-400"></i>
+                </div>
+                <p id="statPendente" class="text-2xl font-black text-amber-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-[10px] text-emerald-500 uppercase font-black">Pronto</p>
+                    <i data-lucide="check-circle" class="w-3 h-3 text-emerald-400"></i>
+                </div>
+                <p id="statResolvido" class="text-2xl font-black text-emerald-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-[10px] text-indigo-500 uppercase font-black">Divergência</p>
+                    <i data-lucide="alert-triangle" class="w-3 h-3 text-indigo-400"></i>
+                </div>
+                <p id="statRegistros" class="text-2xl font-black text-indigo-600">0</p>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="relative">
+            <i data-lucide="search" class="absolute left-4 top-4 text-slate-400 w-5 h-5"></i>
+            <input type="text" id="searchInput" placeholder="Buscar unidade ou colaborador..." 
+                class="w-full pl-12 pr-4 py-4 rounded-2xl border-none card-shadow outline-none text-slate-700 font-medium"
+                oninput="filterStores()">
+        </div>
+
+        <!-- Lista -->
+        <div id="storeList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </main>
+
+    <!-- Modal Form (Seu formulário original com melhorias visuais para mobile) -->
+    <div id="auditModal" class="fixed inset-0 bg-slate-900/60 hidden z-[60] flex items-end md:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xl rounded-t-[32px] md:rounded-[32px] p-6 shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden"></div>
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 id="modalTitle" class="text-xl font-black text-slate-800 uppercase leading-tight"></h2>
+                    <p id="modalSubtitle" class="text-xs text-slate-500 font-mono mt-1"></p>
+                </div>
+                <button onclick="toggleModal('auditModal')" class="bg-slate-100 p-2 rounded-full text-slate-400">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <form id="auditForm" class="space-y-5">
+                <input type="hidden" id="currentStoreId">
+                
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-500 uppercase ml-1">Colaborador</label>
+                    <input type="text" id="editColab" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold uppercase">
+                </div>
+
+                <div class="bg-indigo-50 p-5 rounded-[24px] space-y-4">
+                    <h3 class="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-2">
+                        <i data-lucide="package" class="w-4 h-4"></i> Contagem Física CKO
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-indigo-600 uppercase ml-1">Regular</label>
+                            <input type="number" id="ckoRegular" required placeholder="0" class="w-full p-4 bg-white border border-indigo-100 rounded-xl font-black text-center text-xl" oninput="calculateTotalCKO()">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-indigo-600 uppercase ml-1">Papa Fila</label>
+                            <input type="number" id="ckoPapafila" required placeholder="0" class="w-full p-4 bg-white border border-indigo-100 rounded-xl font-black text-center text-xl" oninput="calculateTotalCKO()">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center px-2">
+                         <div class="space-y-1 w-full">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Informativo CNPJ</label>
+                            <input type="number" id="ckoCnpj" required placeholder="0" class="w-full p-3 bg-white/50 border border-slate-200 rounded-xl font-bold text-center">
+                        </div>
+                    </div>
+                    <div class="bg-indigo-600 p-4 rounded-2xl flex justify-between items-center text-white shadow-lg shadow-indigo-100">
+                        <span class="text-xs font-black uppercase">Total Auditado</span>
+                        <span id="displayTotalCKO" class="text-3xl font-black">0</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">RetailX</label>
+                        <input type="number" id="retailQty" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xl text-slate-700">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">Status</label>
+                        <select id="auditStatus" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold appearance-none">
+                            <option value="Pendente">🟡 Pendente</option>
+                            <option value="Resolvido">🟢 Resolvido</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Data de Referência</label>
+                    <input type="date" id="requestDate" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-semibold">
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="submit" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-black active:scale-95 transition-all uppercase tracking-wider">
+                        Confirmar Auditoria
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modals de Sistema -->
+    <div id="resetModal" class="fixed inset-0 bg-slate-900/80 hidden z-[100] flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-white w-full max-w-sm rounded-[32px] p-8 text-center shadow-2xl">
+            <div class="bg-red-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600">
+                <i data-lucide="alert-octagon" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 uppercase mb-3">Limpar Base?</h2>
+            <p class="text-slate-500 text-sm mb-8 leading-relaxed">Isso apagará todos os dados salvos permanentemente. Esta ação não pode ser desfeita.</p>
+            <div class="flex flex-col gap-3">
+                <button onclick="executeReset()" class="w-full bg-red-600 text-white py-4 rounded-2xl font-black uppercase">Sim, apagar tudo</button>
+                <button onclick="toggleModal('resetModal')" class="w-full py-4 font-bold text-slate-400">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-sm font-bold opacity-0 pointer-events-none transition-all duration-500 shadow-2xl z-[100] flex items-center gap-3"></div>
+
+    <script>
+        // Logica idêntica à sua, mantendo compatibilidade de dados
+        const officialStores = [
+            { id: '0014W00002e9KqTQAU', name: 'COMERCIAL ESPERANCA SUZANO', canal: 'C&C', setor: 'SP547', colab: 'GISLAINE DUARTE DA SILVA' },
+            { id: '0018a000022TUUnAAO', name: 'SEMAR POA', canal: 'NMR', setor: 'SPC346', colab: 'LETICIA DA SILVA SAMPAIO' },
+            { id: '0014W00002e9I12QAE', name: 'ATACADAO FERRAZ DE VASCONCELOS', canal: 'C&C', setor: 'SPC397', colab: 'ALIANA STHEFANI MORAES DA SILVA' },
+            { id: '0014W00002e9I12QAE_2', name: 'ATACADAO FERRAZ DE VASCONCELOS', canal: 'C&C', setor: 'SPCIV08', colab: 'BRAYAN MENDES LIMA' },
+            { id: '0014W00002e9I12QAE_3', name: 'ATACADAO FERRAZ DE VASCONCELOS', canal: 'C&C', setor: 'PROJ-MAIS-SPC553', colab: 'GIOVANNA COLONNO' },
+            { id: '0018a00001x72cLAAQ', name: 'ROSSI EST DO LAGEADO VELHO 1013', canal: 'NMR', setor: 'SPC393', colab: 'ERMESON RIBEIRO LOPES' },
+            { id: '0018a00001x72evAAA', name: 'ROSSI R CARVALHO DE ARAUJO 12', canal: 'NMR', setor: 'SPC383', colab: 'ERMESON RIBEIRO LOPES' },
+            { id: '0014W00002e8KmOQAU', name: 'ASSAI SAO MIGUEL 3', canal: 'C&C', setor: 'SPC413', colab: 'ALEXANDRE DELEGAISE DE LIMA NASCIMENTO' },
+            { id: '0014W00002e9KqVQAU', name: 'COMERCIAL ESPERANCA ITAQUAQUECETUBA', canal: 'C&C', setor: 'SPC374', colab: 'FERNANDA LUANA ROCHA' },
+            { id: '0014W00002e9KlpQAE', name: 'ASSAI ITAQUAQUECETUBA 75', canal: 'C&C', setor: 'SPC374', colab: 'FERNANDA LUANA ROCHA' },
+            { id: '0014W00002e9J9uQAE', name: 'D AVO ITAQUAQUECETUBA', canal: 'NMR', setor: 'SPC374', colab: 'FERNANDA LUANA ROCHA' },
+            { id: '0018a00001x72eUAAQ', name: 'REDE DROGA LESTE ITALO ADAMI 750', canal: 'DPP', setor: 'SPC374', colab: 'FERNANDA LUANA ROCHA' },
+            { id: '0014W00002e9KEVQA2', name: 'ROSSI JARDIM BARAO', canal: 'NMR', setor: 'SPC477', colab: 'GISELE CRISTINA BANDEIRA' },
+            { id: '0014W00002e9JrAQAU', name: 'SHIBATA FERRAZ DE VASCONCELOS', canal: 'NMR', setor: 'SPC477', colab: 'GISELE CRISTINA BANDEIRA' },
+            { id: '001Ho00001Z3pFUIZ', name: 'REDE ROSSI R ABEL BAPTISTA CAMILO', canal: 'NMR', setor: 'SP547', colab: 'GISLAINE DUARTE DA SILVA' },
+            { id: '0018a000026L7DBAA0', name: 'ATACADAO ITAQUAQUECETUBA', canal: 'C&C', setor: 'SPC445', colab: 'JACKELINE AMBROZINA SILVA TOSTES' },
+            { id: '0018a00002cTPMuAAO', name: 'AFLORE COSMETICOS PRACA PADRE JOAO ALVARES 37', canal: 'PERFUMARIA', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0014W00002e9KQLQA2', name: 'AFLORE GOYA CENTRO', canal: 'PERFUMARIA', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0014W00002e9IPkQAM', name: 'DROGASIL ITAQUAQUECETUBA 1', canal: 'DPP', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0018a000022TUUpAAO', name: 'KOBAYASHI JARDIM ITAPUA', canal: 'DPP', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0014W00002e9KawQAE', name: 'PAGUE MENOS SEBASTIAO FERREIRA DOS SANTOS 1', canal: 'DPP', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0018a000022TUUsAAO', name: 'SEMAR ITAQUAQUECETUBA', canal: 'NMR', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0014W00002e9KnOQAU', name: 'SPANI CAIUBY', canal: 'C&C', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0014W00002e9KnVQAU', name: 'SPANI JD ODETE', canal: 'C&C', setor: 'PROJ-MAIS-SPC572', colab: 'JUCELI JUCELINA JESUS DE PAULA' },
+            { id: '0014W00002e9LM5QAM', name: 'TENDA ITAQUAQUECETUBA', canal: 'C&C', setor: 'SPC378', colab: 'KALEB DOS SANTOS SILVA' },
+            { id: '0018a00001vJ7IHAA0', name: 'NOVO ATACADAO POA', canal: 'C&C', setor: 'SPC398', colab: 'KETELLYN ALINE DA SILVA PEREIRA' },
+            { id: '0018a00001vJ7IHAA0_2', name: 'NOVO ATACADAO POA', canal: 'C&C', setor: 'PROJ-MAIS-SPC589', colab: 'KETHLEEN TEREZA NOGUEIRA DE SOUZA' },
+            { id: '0014W00002e9I2dQAE', name: 'ATACADAO SUZANO', canal: 'C&C', setor: 'SPC423', colab: 'VINICIUS LIMA DE OLIVEIRA' },
+            { id: '0014W00002e9JuvQAE', name: 'SHIBATA POA', canal: 'NMR', setor: 'SPC346', colab: 'LETICIA DA SILVA SAMPAIO' },
+            { id: '0014W00002e9I2dQAE_2', name: 'ATACADAO SUZANO', canal: 'C&C', setor: 'PROJ-MAIS-SPC508', colab: 'MATHEUS HENRIQUE BARBOSA LEITE DA SILVA' },
+            { id: '0014W00002e9LM7QAM', name: 'TENDA FERRAZ DE VASCONCELOS', canal: 'C&C', setor: 'SPC411', colab: 'MARIA GABRIELE TAVARES DOS SANTOS' },
+            { id: '0014W00002e9I2dQAE_3', name: 'ATACADAO SUZANO', canal: 'C&C', setor: 'SPC331', colab: 'MARTA ISABEL DOS SANTOS TAUHYL' },
+            { id: '0014W00002e9JJEQA2', name: 'RAIZ SUPERATACADO ITAIM', canal: 'C&C', setor: 'SPC433', colab: 'NICOLAS MARQUES BINOTI' },
+            { id: '0014W00002e9KoNQAU', name: 'ROLDAO ITAIM PAULISTA', canal: 'C&C', setor: 'SPC433', colab: 'NICOLAS MARQUES BINOTI' },
+            { id: '0014W00002e9LHsQAM', name: 'SONDA ITAIM PAULISTA', canal: 'NMR', setor: 'SPC433', colab: 'NICOLAS MARQUES BINOTI' },
+            { id: '0014W00002e9KEPQA2', name: 'SUPERMERCADO ROSSI NEW LTDA', canal: 'NMR', setor: 'SPC433', colab: 'NICOLAS MARQUES BINOTI' },
+            { id: '0018a000026L7DBAA0_2', name: 'ATACADAO ITAQUAQUECETUBA', canal: 'C&C', setor: 'SPC481', colab: 'MARCO ANTONIO FELICIANO TEIXEIRA' },
+            { id: '001Ho00001Z5BAqIAN', name: 'ASSAI ITAQUAQUECETUBA INDUSTRIAL', canal: 'C&C', setor: 'SPC571', colab: 'MAYCON JESUS PONCIANO' },
+            { id: '0014W00002e9KlpQAE_2', name: 'ASSAI ITAQUAQUECETUBA 75', canal: 'C&C', setor: 'SPC380', colab: 'MICAELE GONCALVES DE SOUSA' },
+            { id: '0014W00002e9KmHQAU', name: 'ASSAI NORDESTINA 32', canal: 'C&C', setor: 'SPC389', colab: 'FAUSTO AZARIAS MONTAGNANA OLIVEIRA' },
+            { id: '0018a00001x72cUAAQ', name: 'DROGASIL SP VILA CURUCA 1', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9INWQA2', name: 'DROGASIL SUZANO 2 (HIBRIDO P)', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9Ic9QAE', name: 'DROGASIL SUZANO 3 (HIBRIDO M)', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a00001jxooYAAA', name: 'DSP ITAIM PAULISTA III', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9lrHQAU', name: 'DSP JARDIM HELENA', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9IoSQAU', name: 'DSP PIRES DO RIO', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9ly4QAE', name: 'DSP SAO MIGUEL', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9lySQAU', name: 'DSP SUZANO', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9IppQAE', name: 'DSP SUZANO II', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9KcdQAE', name: 'PAGUE MENOS GEN FRANCISCO GLICERIO 885', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0014W00002e9LBzQAM', name: 'PROMOFARMA MARECHAL TITO', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a000022TUVHAA4', name: 'REDE DROGA LESTE AV OLIVEIRA FREIRE', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a000022TUVLAA4', name: 'REDE DROGA LESTE AV OLIVEIRA FREIRE 1700', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a00001x72ciAAA', name: 'REDE DROGA LESTE DOUTOR JOAO OTAVIANO', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a00001x72eRAAQ', name: 'REDE DROGA LESTE NORDESTINA 4923', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a000022TUVEAA4', name: 'REDE DROGA LESTE R DES PAULO OCTAVIANO', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a000022TUVIAA4', name: 'REDE DROGA LESTE R MANUEL LEMES DA SILVA', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a000022TUVPAA4', name: 'REDE DROGA LESTE R SAO GONCALO DO RIO', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a000022TUVFAA4', name: 'REDE DROGA LESTE R TIBURCIO DE SOUSA', canal: 'DPP', setor: 'SPC384', colab: 'PAULA NOELY DA SILVA MATOS' },
+            { id: '0018a000022TUVMAA4', name: 'SEMAR VILA ROMANOPOLIS', canal: 'NMR', setor: 'SPC376', colab: 'RENATO ANDRE DE MELO RIBEIRO' },
+            { id: '0014W00002e9LM7QAM_2', name: 'TENDA FERRAZ DE VASCONCELOS', canal: 'C&C', setor: 'SPC376', colab: 'RENATO ANDRE DE MELO RIBEIRO' },
+            { id: '0014W00002e9JBzQAM', name: 'SHIBATA ITAQUAQUECETUBA', canal: 'NMR', setor: 'SP548', colab: 'MARCOS AUGUSTO CUSTODIO DA SILVA' },
+            { id: '0014W00002e9LM4QAM', name: 'TENDA SUZANO', canal: 'C&C', setor: 'SP548', colab: 'THAYSSA JOYCE THIAGO' },
+            { id: '0014W00002e9LM5QAM_2', name: 'TENDA ITAQUAQUECETUBA', canal: 'C&C', setor: 'SP545', colab: 'VANESSA DA SILVA SANTOS' }
+        ];
+
+        let stores = [];
+        let audits = {};
+
+        // Inicialização
+        window.onload = () => {
+            loadData();
+            updateStats();
+            renderStores();
+            lucide.createIcons();
+            document.getElementById('requestDate').valueAsDate = new Date();
+            
+            // Registro do Service Worker para PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            }
+        };
+
+        function loadData() {
+            const s = localStorage.getItem('aud_stores_final');
+            const a = localStorage.getItem('aud_data_final');
+            stores = s ? JSON.parse(s) : officialStores;
+            audits = a ? JSON.parse(a) : {};
+        }
+
+        function saveData() {
+            localStorage.setItem('aud_stores_final', JSON.stringify(stores));
+            localStorage.setItem('aud_data_final', JSON.stringify(audits));
+            updateStats();
+        }
+
+        function calculateTotalCKO() {
+            const reg = parseInt(document.getElementById('ckoRegular').value) || 0;
+            const pf = parseInt(document.getElementById('ckoPapafila').value) || 0;
+            const total = reg + pf;
+            document.getElementById('displayTotalCKO').innerText = total;
+            return total;
+        }
+
+        function renderStores(filtered = null) {
+            const container = document.getElementById('storeList');
+            const data = filtered || stores;
+            
+            if (data.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400 font-bold uppercase tracking-widest opacity-30">Nenhum resultado</div>`;
+                return;
+            }
+
+            container.innerHTML = data.map(store => {
+                const audit = audits[store.id];
+                const calcCKO = audit ? (audit.regular + audit.papafila) : 0;
+                const diff = audit ? calcCKO - audit.retail : 0;
+                
+                return `
+                <div class="bg-white rounded-3xl border border-slate-200 card-shadow p-5 hover:border-indigo-300 transition-all cursor-pointer active:scale-[0.98]" onclick="openAuditModal('${store.id}')">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-[9px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-black uppercase">${store.id.split('_')[0]}</span>
+                        ${audit ? `
+                            <span class="text-[9px] px-2 py-1 rounded-lg font-black uppercase ${audit.status === 'Resolvido' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                ${audit.status}
+                            </span>
+                        ` : ''}
+                    </div>
+                    
+                    <h3 class="font-black text-slate-800 leading-tight text-lg uppercase">${store.name}</h3>
+                    
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <div class="text-[10px]">
+                            <p class="text-slate-400 font-black uppercase">Responsável</p>
+                            <p class="text-indigo-600 font-bold truncate">${store.colab || '-'}</p>
+                        </div>
+                        <div class="text-[10px]">
+                            <p class="text-slate-400 font-black uppercase">Canal / Setor</p>
+                            <p class="text-slate-700 font-bold truncate">${store.canal || '-'} | ${store.setor || '-'}</p>
+                        </div>
+                    </div>
+
+                    ${audit ? `
+                        <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between items-end">
+                            <div class="flex gap-4">
+                                <div class="text-center">
+                                    <p class="text-[8px] text-slate-400 uppercase font-black">Auditado</p>
+                                    <p class="text-base font-black text-slate-800">${calcCKO}</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-[8px] text-slate-400 uppercase font-black">RetailX</p>
+                                    <p class="text-base font-black text-slate-800">${audit.retail}</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-[8px] text-slate-400 uppercase font-black">Diverg.</p>
+                                    <p class="text-base font-black ${diff != 0 ? 'text-red-500' : 'text-emerald-500'}">${diff > 0 ? '+'+diff : diff}</p>
+                                </div>
+                            </div>
+                             <p class="text-[9px] text-slate-300 font-bold uppercase">${formatDate(audit.date)}</p>
+                        </div>
+                    ` : `
+                        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2 text-slate-300 font-black text-[10px] uppercase">
+                            <i data-lucide="circle-dashed" class="w-3 h-3"></i> Aguardando Auditoria
+                        </div>
+                    `}
+                </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function filterStores() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = stores.filter(s => 
+                s.name.toLowerCase().includes(term) || 
+                s.id.toLowerCase().includes(term) ||
+                (s.colab && s.colab.toLowerCase().includes(term))
+            );
+            renderStores(filtered);
+        }
+
+        function openAuditModal(id) {
+            const store = stores.find(s => s.id === id);
+            const audit = audits[id] || { regular: 0, papafila: 0, cnpj: 0, retail: 0, date: new Date().toISOString().split('T')[0], status: 'Pendente' };
+            
+            document.getElementById('currentStoreId').value = id;
+            document.getElementById('modalTitle').innerText = store.name;
+            document.getElementById('modalSubtitle').innerText = `ID: ${id.split('_')[0]} | SETOR: ${store.setor}`;
+            document.getElementById('editColab').value = store.colab || '';
+            
+            document.getElementById('ckoRegular').value = audit.regular || '';
+            document.getElementById('ckoPapafila').value = audit.papafila || '';
+            document.getElementById('ckoCnpj').value = audit.cnpj || '';
+            document.getElementById('retailQty').value = audit.retail || '';
+            document.getElementById('requestDate').value = audit.date;
+            document.getElementById('auditStatus').value = audit.status;
+            
+            calculateTotalCKO();
+            toggleModal('auditModal');
+        }
+
+        document.getElementById('auditForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('currentStoreId').value;
+            const newColab = document.getElementById('editColab').value.toUpperCase();
+
+            const storeIdx = stores.findIndex(s => s.id === id);
+            if (storeIdx !== -1) stores[storeIdx].colab = newColab;
+            
+            audits[id] = {
+                regular: parseInt(document.getElementById('ckoRegular').value) || 0,
+                papafila: parseInt(document.getElementById('ckoPapafila').value) || 0,
+                cnpj: parseInt(document.getElementById('ckoCnpj').value) || 0,
+                retail: parseInt(document.getElementById('retailQty').value) || 0,
+                date: document.getElementById('requestDate').value,
+                status: document.getElementById('auditStatus').value,
+                updatedAt: new Date().toISOString()
+            };
+            
+            saveData();
+            renderStores();
+            toggleModal('auditModal');
+            showToast('Dados salvos com sucesso!');
+        });
+
+        function confirmReset() {
+            toggleModal('resetModal');
+        }
+
+        function executeReset() {
+            audits = {};
+            saveData();
+            renderStores();
+            toggleModal('resetModal');
+            showToast('Base de dados limpa!');
+        }
+
+        function exportToExcel() {
+            if (Object.keys(audits).length === 0) {
+                showToast('Sem dados para exportar');
+                return;
+            }
+
+            const rows = stores.map(s => {
+                const a = audits[s.id] || {};
+                const calcCKO = (a.regular || 0) + (a.papafila || 0);
+                return [
+                    s.id.split('_')[0], s.name, s.canal || '', s.setor || '', s.colab || '',
+                    a.regular || 0, a.papafila || 0, a.cnpj || 0,
+                    calcCKO, a.retail || 0, calcCKO - (a.retail || 0),
+                    a.date || '', a.status || 'Pendente'
+                ];
+            });
+
+            const csvHeader = "ID_LOJA;UNIDADE;CANAL;SETOR;COLABORADOR;REGULAR;PAPAFILA;CNPJ_INFO;TOTAL_AUDITADO;RETAILX;DIVERGENCA;DATA;STATUS\n";
+            const csvBody = rows.map(r => r.join(';')).join('\n');
+            const blob = new Blob(["\ufeff" + csvHeader + csvBody], { type: 'text/csv;charset=utf-8;' });
+            
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Relatorio_CKO_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+            showToast('Arquivo CSV gerado!');
+        }
+
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerHTML = `<i data-lucide="info" class="w-4 h-4"></i> ${msg}`;
+            lucide.createIcons();
+            t.classList.remove('opacity-0', 'translate-y-4');
+            t.classList.add('opacity-100', '-translate-y-2');
+            setTimeout(() => {
+                t.classList.add('opacity-0', 'translate-y-4');
+                t.classList.remove('opacity-100', '-translate-y-2');
+            }, 3000);
+        }
+
+        function updateStats() {
+            const vals = Object.values(audits);
+            document.getElementById('statTotal').innerText = stores.length;
+            document.getElementById('statPendente').innerText = stores.length - vals.filter(a => a.status === 'Resolvido').length;
+            document.getElementById('statResolvido').innerText = vals.filter(a => a.status === 'Resolvido').length;
+            
+            // Soma de divergências totais
+            const divergencias = vals.reduce((acc, a) => acc + Math.abs((a.regular + a.papafila) - a.retail), 0);
+            document.getElementById('statRegistros').innerText = divergencias;
+        }
+
+        function formatDate(d) {
+            if(!d) return '';
+            const parts = d.split('-');
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+    </script>
+</body>
+</html>
