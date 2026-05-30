@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -11,10 +12,8 @@
     <link rel="apple-touch-icon" href="logo.png">
     <title>Auditoria CKO Pro</title>
     
-    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     
-    <!-- Fontes e Ícones -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -55,11 +54,9 @@
 </head>
 <body class="pb-20">
 
-    <!-- Header com Logo SVG -->
     <header class="bg-slate-900 text-white px-6 sticky top-0 z-50 shadow-md">
         <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-                <!-- Logo Criado em SVG -->
                 <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-lg">
                     <rect width="100" height="100" rx="22" fill="#4f46e5"/>
                     <path d="M30 50L45 65L75 35" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -83,7 +80,6 @@
 
     <main class="max-w-5xl mx-auto p-4 space-y-6">
         
-        <!-- Dashboard Rápido -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div class="bg-white p-4 rounded-2xl border border-slate-200 card-shadow">
                 <div class="flex items-center justify-between mb-1">
@@ -115,7 +111,6 @@
             </div>
         </div>
 
-        <!-- Filtros -->
         <div class="relative">
             <i data-lucide="search" class="absolute left-4 top-4 text-slate-400 w-5 h-5"></i>
             <input type="text" id="searchInput" placeholder="Buscar unidade ou colaborador..." 
@@ -123,11 +118,9 @@
                 oninput="filterStores()">
         </div>
 
-        <!-- Lista -->
         <div id="storeList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </main>
 
-    <!-- Modal Form -->
     <div id="auditModal" class="fixed inset-0 bg-slate-900/60 hidden z-[60] flex items-end md:items-center justify-center backdrop-blur-sm">
         <div class="bg-white w-full max-w-xl rounded-t-[32px] md:rounded-[32px] p-6 shadow-2xl overflow-y-auto max-h-[95vh] no-scrollbar">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden"></div>
@@ -153,7 +146,7 @@
                     <h3 class="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-2">
                         <i data-lucide="package" class="w-4 h-4"></i> Contagem Física CKO
                     </h3>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-3 gap-3">
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-indigo-600 uppercase ml-1">Regular</label>
                             <input type="number" id="ckoRegular" required placeholder="0" class="w-full p-4 bg-white border border-indigo-100 rounded-xl font-black text-center text-xl" oninput="calculateTotalCKO()">
@@ -162,13 +155,26 @@
                             <label class="text-[10px] font-bold text-indigo-600 uppercase ml-1">Papa Fila</label>
                             <input type="number" id="ckoPapafila" required placeholder="0" class="w-full p-4 bg-white border border-indigo-100 rounded-xl font-black text-center text-xl" oninput="calculateTotalCKO()">
                         </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-indigo-600 uppercase ml-1">Self CKO</label>
+                            <input type="number" id="ckoSelf" required placeholder="0" class="w-full p-4 bg-white border border-indigo-100 rounded-xl font-black text-center text-xl" oninput="calculateTotalCKO()">
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center px-2">
+                    
+                    <div class="grid grid-cols-2 gap-3 px-2">
                          <div class="space-y-1 w-full">
                             <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Informativo CNPJ</label>
                             <input type="number" id="ckoCnpj" required placeholder="0" class="w-full p-3 bg-white/50 border border-slate-200 rounded-xl font-bold text-center">
                         </div>
+                        <div class="space-y-1 w-full">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Qtd. Correta na Loja?</label>
+                            <select id="ckoCorreto" class="w-full p-3 bg-white/50 border border-slate-200 rounded-xl font-bold appearance-none text-center outline-none">
+                                <option value="Sim">✅ Sim</option>
+                                <option value="Não">❌ Não</option>
+                            </select>
+                        </div>
                     </div>
+                    
                     <div class="bg-indigo-600 p-4 rounded-2xl flex justify-between items-center text-white shadow-lg shadow-indigo-100">
                         <span class="text-xs font-black uppercase">Total Auditado</span>
                         <span id="displayTotalCKO" class="text-3xl font-black">0</span>
@@ -203,7 +209,6 @@
         </div>
     </div>
 
-    <!-- Modals de Sistema -->
     <div id="resetModal" class="fixed inset-0 bg-slate-900/80 hidden z-[100] flex items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white w-full max-w-sm rounded-[32px] p-8 text-center shadow-2xl">
             <div class="bg-red-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600">
@@ -321,7 +326,8 @@
         function calculateTotalCKO() {
             const reg = parseInt(document.getElementById('ckoRegular').value) || 0;
             const pf = parseInt(document.getElementById('ckoPapafila').value) || 0;
-            const total = reg + pf;
+            const self = parseInt(document.getElementById('ckoSelf').value) || 0; // Calculo ajustado
+            const total = reg + pf + self;
             document.getElementById('displayTotalCKO').innerText = total;
             return total;
         }
@@ -387,7 +393,9 @@
             document.getElementById('editColab').value = audit.colab || store.colab;
             document.getElementById('ckoRegular').value = audit.ckoRegular || '';
             document.getElementById('ckoPapafila').value = audit.ckoPapafila || '';
+            document.getElementById('ckoSelf').value = audit.ckoSelf || '';
             document.getElementById('ckoCnpj').value = audit.ckoCnpj || '';
+            document.getElementById('ckoCorreto').value = audit.ckoCorreto || 'Sim';
             document.getElementById('retailQty').value = audit.retailQty || '';
             document.getElementById('auditStatus').value = audit.status || 'Pendente';
             
@@ -405,7 +413,9 @@
                 colab: document.getElementById('editColab').value.toUpperCase(),
                 ckoRegular: parseInt(document.getElementById('ckoRegular').value) || 0,
                 ckoPapafila: parseInt(document.getElementById('ckoPapafila').value) || 0,
+                ckoSelf: parseInt(document.getElementById('ckoSelf').value) || 0,
                 ckoCnpj: parseInt(document.getElementById('ckoCnpj').value) || 0,
+                ckoCorreto: document.getElementById('ckoCorreto').value,
                 retailQty: parseInt(document.getElementById('retailQty').value) || 0,
                 totalCKO: calculateTotalCKO(),
                 status: document.getElementById('auditStatus').value,
@@ -470,22 +480,24 @@
                 return;
             }
 
-            let csv = 'ID Loja;Unidade;Canal;Setor;Colaborador;Regular;Papa Fila;Informativo CNPJ;Total CKO;RetailX;Divergencia;Status;Data\n';
+            // Novas colunas adicionadas no CSV
+            let csv = 'ID Loja;Unidade;Canal;Setor;Colaborador;Regular;Papa Fila;Self CKO;Informativo CNPJ;Qtd Correta?;Total CKO;RetailX;Divergencia;Status;Data\n';
             
             stores.forEach(s => {
                 const a = audits[s.id] || {};
                 const div = a.totalCKO !== undefined ? a.totalCKO - a.retailQty : '';
                 csv += [
                     s.id, s.name, s.canal, s.setor, a.colab || s.colab,
-                    a.ckoRegular || 0, a.ckoPapafila || 0, a.ckoCnpj || 0,
-                    a.totalCKO || 0, a.retailQty || 0, div, a.status || 'Pendente', a.date || ''
+                    a.ckoRegular || 0, a.ckoPapafila || 0, a.ckoSelf || 0, a.ckoCnpj || 0,
+                    a.ckoCorreto || 'Sim', a.totalCKO || 0, a.retailQty || 0, div, a.status || 'Pendente', a.date || ''
                 ].join(';') + '\n';
             });
 
+            // Código de download corrigido e completado
             const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `Auditoria_CKO_${new Date().toLocaleDateString()}.csv`);
+            link.download = `Auditoria_CKO_${new Date().toISOString().split('T')[0]}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
